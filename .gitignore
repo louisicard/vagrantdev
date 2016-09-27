@@ -1,4 +1,4 @@
 /.vagrant
 /*.log
 /www/*
-!www
+!www/.placeholder
