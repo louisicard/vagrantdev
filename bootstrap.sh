@@ -13,11 +13,14 @@ echo -e "\n--- Install base packages ---\n"
 apt-get -y install vim curl build-essential python-software-properties git > /dev/null 2>&1
 
 echo -e "\n--- Add some repos to update our distro ---\n"
-add-apt-repository ppa:ondrej/php5 > /dev/null 2>&1
-add-apt-repository ppa:chris-lea/node.js > /dev/null 2>&1
+add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
+add-apt-repository -y ppa:ondrej/apache2 > /dev/null 2>&1
 
 echo -e "\n--- Updating packages list ---\n"
 apt-get -qq update
+
+echo -e "\n--- Installing PHP-specific packages ---\n"
+apt-get -y install php5.6 php5.6-mcrypt php5.6-mbstring php5.6-curl php5.6-cli php5.6-mysql php5.6-gd php5.6-intl php5.6-xsl php5.6-xdebug php5.6-tidy apache2 libapache2-mod-php5.6 > /dev/null 2>&1
 
 echo -e "\n--- Install MySQL specific packages and settings ---\n"
 echo "mysql-server mysql-server/root_password password $DBPASSWD" | debconf-set-selections
@@ -29,9 +32,6 @@ echo "phpmyadmin phpmyadmin/mysql/app-pass password $DBPASSWD" | debconf-set-sel
 echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | debconf-set-selections
 apt-get -y install mysql-server-5.5 phpmyadmin > /dev/null 2>&1
 
-echo -e "\n--- Installing PHP-specific packages ---\n"
-apt-get -y install php5 apache2 libapache2-mod-php5 php5-curl php5-gd php5-mcrypt php5-mysql php-apc php5-xdebug > /dev/null 2>&1
-
 echo -e "\n--- Enabling mod-rewrite ---\n"
 a2enmod rewrite > /dev/null 2>&1
 
@@ -39,8 +39,9 @@ echo -e "\n--- Allowing Apache override to all ---\n"
 sed -i "s/AllowOverride None/AllowOverride All/g" /etc/apache2/apache2.conf
 
 echo -e "\n--- We definitly need to see the PHP errors, turning them on ---\n"
-sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php5/apache2/php.ini
-sed -i "s/display_errors = .*/display_errors = On/" /etc/php5/apache2/php.ini
+sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/5.6/apache2/php.ini
+sed -i "s/display_errors = .*/display_errors = On/" /etc/php/5.6/apache2/php.ini
+sed -i "s/memory_limit = .*/memory_limit = 1G/" /etc/php/5.6/apache2/php.ini
 
 
 a2dissite default > /dev/null 2>&1
@@ -52,19 +53,11 @@ rm -f /etc/apache2/sites-enabled/*
 
 echo -e "\n--- Configure Apache to use phpmyadmin ---\n"
 cat > /etc/apache2/ports.conf <<EOF
-NameVirtualHost *:80
 Listen 80
-NameVirtualHost *:81
 Listen 81
-NameVirtualHost *:82
 Listen 82
 
 <IfModule mod_ssl.c>
-    # If you add NameVirtualHost *:443 here, you will also have to change
-    # the VirtualHost statement in /etc/apache2/sites-available/default-ssl
-    # to <VirtualHost *:443>
-    # Server Name Indication for SSL named virtual hosts is currently not
-    # supported by MSIE on Windows XP.
     Listen 443
 </IfModule>
 
@@ -73,7 +66,7 @@ Listen 82
 </IfModule>
 EOF
 
-cat > /etc/apache2/sites-available/phpmyadmin <<EOF
+cat > /etc/apache2/sites-available/phpmyadmin.conf <<EOF
 <VirtualHost *:81>
     ServerAdmin webmaster@localhost
     DocumentRoot /usr/share/phpmyadmin
@@ -85,7 +78,7 @@ EOF
 a2ensite phpmyadmin > /dev/null 2>&1
 
 echo -e "\n--- Add environment variables to Apache ---\n"
-cat > /etc/apache2/sites-available/default <<EOF
+cat > /etc/apache2/sites-available/default.conf <<EOF
 <VirtualHost *:80>
     DocumentRoot /var/www/default
     ErrorLog \${APACHE_LOG_DIR}/error.log
@@ -111,9 +104,10 @@ if [ ! -d "/var/www/drupal" ]; then
   wget https://ftp.drupal.org/files/projects/drupal-8.1.10.tar.gz > /dev/null 2>&1
   tar xzf drupal-8.1.10.tar.gz > /dev/null 2>&1
   mv drupal-8.1.10 drupal
+  rm -f drupal-8.1.10.tar.gz
   mkdir drupal/sites/default/files
   chmod -R 777 drupal/sites/default/files
-  cat > /etc/apache2/sites-available/drupal <<EOF
+  cat > /etc/apache2/sites-available/drupal.conf <<EOF
 <VirtualHost *:82>
     DocumentRoot /var/www/drupal
     ErrorLog \${APACHE_LOG_DIR}/error.log

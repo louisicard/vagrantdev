@@ -5,6 +5,11 @@ Vagrant.configure(2) do |config|
   config.vm.network :forwarded_port, guest: 81, host: 4501
   config.vm.network :forwarded_port, guest: 82, host: 4502
   
+  config.vm.provider "virtualbox" do |v|
+	  v.memory = 2048
+	  v.cpus = 4
+	end
+  
   config.vm.synced_folder "www/", "/var/www", id: "vagrant-root",
     owner: "vagrant",
     group: "www-data",
