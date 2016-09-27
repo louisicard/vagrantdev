@@ -98,6 +98,13 @@ a2ensite default > /dev/null 2>&1
 
 
 echo -e "\n--- Creating Drupal site ---\n"
+cat > /etc/apache2/sites-available/drupal.conf <<EOF
+<VirtualHost *:82>
+    DocumentRoot /var/www/drupal
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
 if [ ! -d "/var/www/drupal" ]; then
   mysql -uroot -p$DBPASSWD -e "CREATE DATABASE drupal CHARSET utf8"
   cd /var/www
@@ -107,13 +114,6 @@ if [ ! -d "/var/www/drupal" ]; then
   rm -f drupal-8.1.10.tar.gz
   mkdir drupal/sites/default/files
   chmod -R 777 drupal/sites/default/files
-  cat > /etc/apache2/sites-available/drupal.conf <<EOF
-<VirtualHost *:82>
-    DocumentRoot /var/www/drupal
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-EOF
 fi
 a2ensite drupal > /dev/null 2>&1
 
