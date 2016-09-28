@@ -153,8 +153,12 @@ cat > /etc/apache2/sites-available/cpool_eval1.conf <<EOF
 EOF
 if [ ! -d "/var/www/cpool_eval1" ]; then
   mysql -uroot -p$DBPASSWD -e "CREATE DATABASE cpool_eval1 CHARSET utf8"
+  mysql -uroot -p$DBPASSWD cpool_eval1 < /vagrant/cpool_eval1.sql
   cd /var/www
   mkdir cpool_eval1
+  cd cpool_eval1
+  tar xzf /vagrant/cpool_eval1.tgz
+  chmod -R 777 sites/default/files
 fi
 a2ensite cpool_eval1 > /dev/null 2>&1
 
