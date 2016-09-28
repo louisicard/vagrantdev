@@ -56,6 +56,7 @@ cat > /etc/apache2/ports.conf <<EOF
 Listen 80
 Listen 81
 Listen 82
+Listen 83
 
 <IfModule mod_ssl.c>
     Listen 443
@@ -116,6 +117,27 @@ if [ ! -d "/var/www/drupal" ]; then
   chmod -R 777 drupal/sites/default/files
 fi
 a2ensite drupal > /dev/null 2>&1
+
+
+echo -e "\n--- Creating Drupal 7 site ---\n"
+cat > /etc/apache2/sites-available/drupal7.conf <<EOF
+<VirtualHost *:83>
+    DocumentRoot /var/www/drupal7
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+if [ ! -d "/var/www/drupal7" ]; then
+  mysql -uroot -p$DBPASSWD -e "CREATE DATABASE drupal7 CHARSET utf8"
+  cd /var/www
+  wget https://ftp.drupal.org/files/projects/drupal-7.50.tar.gz > /dev/null 2>&1
+  tar xzf drupal-7.50.tar.gz > /dev/null 2>&1
+  mv drupal-7.50 drupal7
+  rm -f drupal-7.50.tar.gz
+  mkdir drupal7/sites/default/files
+  chmod -R 777 drupal7/sites/default/files
+fi
+a2ensite drupal7 > /dev/null 2>&1
 
 echo -e "\n--- Restarting Apache ---\n"
 service apache2 restart > /dev/null 2>&1
