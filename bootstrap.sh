@@ -42,6 +42,8 @@ echo -e "\n--- We definitly need to see the PHP errors, turning them on ---\n"
 sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/5.6/apache2/php.ini
 sed -i "s/display_errors = .*/display_errors = On/" /etc/php/5.6/apache2/php.ini
 sed -i "s/memory_limit = .*/memory_limit = 1G/" /etc/php/5.6/apache2/php.ini
+sed -i "s/upload_max_filesize = .*/upload_max_filesize = 32M/" /etc/php/5.6/apache2/php.ini
+sed -i "s/post_max_size = .*/post_max_size = 32M/" /etc/php/5.6/apache2/php.ini
 
 
 a2dissite default > /dev/null 2>&1
