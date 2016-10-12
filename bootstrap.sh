@@ -59,6 +59,7 @@ Listen 80
 Listen 81
 Listen 82
 Listen 83
+Listen 84
 
 <IfModule mod_ssl.c>
     Listen 443
@@ -140,6 +141,27 @@ if [ ! -d "/var/www/drupal7" ]; then
   chmod -R 777 drupal7/sites/default/files
 fi
 a2ensite drupal7 > /dev/null 2>&1
+
+
+echo -e "\n--- Creating Cpool eval 2 site ---\n"
+cat > /etc/apache2/sites-available/cpool_eval2.conf <<EOF
+<VirtualHost *:84>
+    DocumentRoot /var/www/cpool_eval2
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+if [ ! -d "/var/www/cpool_eval2" ]; then
+  mysql -uroot -p$DBPASSWD -e "CREATE DATABASE cpool_eval2 CHARSET utf8"
+  cd /var/www
+  wget https://ftp.drupal.org/files/projects/drupal-7.50.tar.gz > /dev/null 2>&1
+  tar xzf drupal-7.50.tar.gz > /dev/null 2>&1
+  mv drupal-7.50 cpool_eval2
+  rm -f drupal-7.50.tar.gz
+  mkdir cpool_eval2/sites/default/files
+  chmod -R 777 drupal7/sites/default/files
+fi
+a2ensite cpool_eval2 > /dev/null 2>&1
 
 echo -e "\n--- Restarting Apache ---\n"
 service apache2 restart > /dev/null 2>&1
